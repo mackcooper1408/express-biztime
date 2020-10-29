@@ -14,14 +14,29 @@ router.get("/", async function (req, res, next) {
 });
 
 router.get("/:code", async function (req, res, next) {
-  const code = req.params.code;
-  const results = await db.query(
-    `SELECT * FROM companies
-    WHERE code = $1`,
-    [code]
-  );
-  const company = results.rows[0];
-  return res.json({ company: company });
+  try {
+    const code = req.params.code;
+    const cResults = await db.query(
+      `SELECT * FROM companies
+      WHERE code = $1`,
+      [code]
+    );
+    const company = cResults.rows[0];
+    if (!company) throw new NotFoundError;
+
+    const iResults = await db.query(
+      `SELECT * FROM invoices
+      WHERE comp_code = $1`,
+      [code]
+    )
+    const invoices = iResults.rows;
+    company.invoices = invoices;
+
+    return res.json({ company: company });
+
+  } catch (error) {
+    return next(error);
+  }
 });
 
 router.post("/", async function (req, res, next) {

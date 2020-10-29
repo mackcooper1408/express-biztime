@@ -15,32 +15,34 @@ router.get("/", async function (req, res, next) {
 });
 
 router.get("/:id", async function (req, res, next) {
-  const id = req.params.id;
-  const iResult = await db.query(
-    `SELECT id, amt, paid, add_date, paid_date, comp_code AS company FROM invoices
-    WHERE id = $1`,
-    [id]
-  );
-  const invoice = iResult.rows[0];
+  try {
+    const id = req.params.id;
+    const iResult = await db.query(
+      `SELECT id, amt, paid, add_date, paid_date, comp_code AS company FROM invoices
+      WHERE id = $1`,
+      [id]
+    );
+    const invoice = iResult.rows[0];
+    if (!invoice) throw new NotFoundError;
 
-  // invoice has comp_code = "apple"
-  // find companie where code = comp_code = "apple"
+    const cResult = await db.query(
+      `SELECT * FROM companies
+      WHERE code = $1`,
+      [invoice.company]
+    )
+    const company = cResult.rows[0];
+    invoice.company = company;
 
-  const cResult = await db.query(
-    `SELECT * FROM companies
-    WHERE code = $1`,
-    [invoice.company]
-  )
-  const company = cResult.rows[0];
-  invoice.company = company;
+    return res.json({ invoice: invoice });
 
-  return res.json({ invoice: invoice })
+  } catch (error) {
+    return next(error);
+  }
 });
-
 
 router.post("/", async function (req, res, next) {
 
-  let { comp_code, amt } = req.body;
+  const { comp_code, amt } = req.body;
 
   const result = await db.query(
     `INSERT INTO invoices
@@ -52,6 +54,45 @@ router.post("/", async function (req, res, next) {
 
   return res.json({ invoice: invoice });
 
+});
+
+
+router.put("/:id", async function (req, res, next) {
+  try {
+    const id = req.params.id;
+    const { amt } = req.body;
+
+    const result = await db.query(
+      `UPDATE invoices
+      SET amt = $1
+      WHERE id = $2
+      RETURNING *`,
+      [amt, id]
+    )
+    const invoice = result.rows[0];
+    if (!invoice) throw new NotFoundError;
+    return res.json({ invoice: invoice });
+
+  } catch (error) {
+    return next(error);
+  }
+});
+
+
+router.delete("/:id", async function (req, res, next) {
+  try {
+    const id = req.params.id;
+    const result = await db.query(
+      `DELETE FROM invoices
+      WHERE id = $1`,
+      [id]
+    )
+    if (!result.rowCount) throw new NotFoundError;
+    return res.json({ status: "deleted" });
+
+  } catch (error) {
+    return next(error);
+  }
 });
 
 module.exports = router;
