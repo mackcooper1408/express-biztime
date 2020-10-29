@@ -4,7 +4,7 @@ const express = require("express");
 const { NotFoundError } = require("./expressError");
 
 const companyRoutes = require("./routes/companies");
-// const invoiceRoutes = require("./routes/invoices");
+const invoiceRoutes = require("./routes/invoices");
 
 const app = express();
 
@@ -12,7 +12,7 @@ app.use(express.json());
 
 // routers
 app.use("/companies", companyRoutes);
-// app.use("/invoices", invoiceRoutes);
+app.use("/invoices", invoiceRoutes);
 
 
 
