@@ -14,7 +14,6 @@ router.get("/", async function (req, res, next) {
   return res.json({ invoices: invoices })
 });
 
-
 router.get("/:id", async function (req, res, next) {
   const id = req.params.id;
   const iResult = await db.query(
@@ -23,6 +22,9 @@ router.get("/:id", async function (req, res, next) {
     [id]
   );
   const invoice = iResult.rows[0];
+
+  // invoice has comp_code = "apple"
+  // find companie where code = comp_code = "apple"
 
   const cResult = await db.query(
     `SELECT * FROM companies
@@ -33,6 +35,23 @@ router.get("/:id", async function (req, res, next) {
   invoice.company = company;
 
   return res.json({ invoice: invoice })
+});
+
+
+router.post("/", async function (req, res, next) {
+
+  let { comp_code, amt } = req.body;
+
+  const result = await db.query(
+    `INSERT INTO invoices
+    (comp_code, amt) VALUES ($1, $2)
+    RETURNING *`,
+    [comp_code, amt]
+  )
+  const invoice = result.rows[0];
+
+  return res.json({ invoice: invoice });
+
 });
 
 module.exports = router;
