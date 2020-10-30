@@ -48,7 +48,7 @@ router.post("/", async function (req, res, next) {
     [code, name, description]
   );
   const company = results.rows[0];
-  return res.json({ company: company });
+  return res.status(201).json({ company: company });
 });
 
 router.put("/:code", async function (req, res, next) {

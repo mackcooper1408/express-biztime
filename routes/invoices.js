@@ -52,7 +52,7 @@ router.post("/", async function (req, res, next) {
   )
   const invoice = result.rows[0];
 
-  return res.json({ invoice: invoice });
+  return res.status(201).json({ invoice: invoice });
 
 });
 
